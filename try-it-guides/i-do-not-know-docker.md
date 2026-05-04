@@ -1,0 +1,48 @@
+# Detailed guide
+
+## Reminders
+
+The workshop team has a dummy Python BMI model (regardless of input, every output value is 0) that they would like you to integrate into NGIAB. The model source code is located in a [GitHub repository](https://github.com/quinnylee/bmi_dummy). The model is also published on [PyPI](https://pypi.org/project/bmi-dummy/). An input data package for testing the dummy BMI model within NGIAB is stored in [Box](https://alabama.box.com/s/8sx72ozsg9uxh3e61how7fi0qoolpy1w).
+
+## Instructions
+
+1. Please make sure your computer meets the requirements in our ["Before the Workshop" guide](../before-the-workshop.md).
+2. Navigate to the directory where you cloned the NGIAB source code. NGIAB is built with the Dockerfile located in `docker/Dockerfile`. Examine the Dockerfile's structure.
+   1. Dockerfiles give instructions to a virtual machine in a specific order. This is helpful for building specific environments (Docker images) that need to be replicated. Dockerfile builds occur in "stages", which are marked by lines that look like `FROM rockylinux:9.1 AS base`. In this case, the `rockylinux:9.1` Docker image from Dockerhub is used and renamed to `BASE`. In the following lines, various packages are installed that are required to build the rest of the NGIAB packages. The `base` stage lasts until you see another stage change at `FROM base AS build_base`.
+   2. The `final` stage is the only stage that is accessible once Docker image is built. It is important that your model is accessible from this stage. Where does this stage begin?
+3. Build the Docker image before you make any changes so you can watch how Dockerfiles build Docker images in real-time.
+   1. Make sure your working directory is the `docker` directory within the `NGIAB-CloudInfra` directory. To check your working directory, use `pwd` (**P**rint **W**orking **D**irectory). You can use `cd path/to/desired/directory` to **C**hange **D**irectories to the `docker` directory.
+   2. Use this command to build your Docker image.
+
+    ```bash
+    docker build -f Dockerfile -t devcon-workshop .
+    ```
+
+    The `-f` tag indicates the location of the Dockerfile relative to the build context, the `-t` tag specifies the name of your new Docker image, and `.` is the build context (the current working directory).
+
+4. Edit the Dockerfile to make sure that the bmi-dummy Python package is installed in the NGIAB image.
+   1. Insert this line at line 293 (after the two `ADD --unpack` commands), which is in the `final` stage. Make sure to save!
+
+    ```Dockerfile
+    RUN uv pip install bmi-dummy
+    ```
+
+   A `RUN` command tells the virtual machine to run the following command. In this case, the `bmi-dummy` Python package distributed on PyPI is being `uv pip install`ed into the virtual machine. (`uv pip install` is the same as `pip install`, but faster.)
+
+5. Rebuild the NGIAB Docker image. Use the same `docker build` command as before.
+6. Download the data package from Box if you haven't already.
+7. Run NGIAB with this command. Make sure to replace `/absolute/path/to/test/package` with the actual absolute path to the downloaded data package. Follow the interactive terminal prompts once the container (the virtual machine containing the image) is started.
+
+   ```bash
+   docker run --rm -it -v "/absolute/path/to/test/package:/ngen/ngen/data" devcon-workshop /ngen/ngen/data
+   ```
+
+   In this command, `--rm` tells Docker to automatically delete the container once the process is finished. `-it` tells Docker to open an interactive terminal. `-v` tells Docker to "mount" a local directory to a specific location in the virtual machine (like sticking a flash drive into a computer), and the following arguments take the form of `/path/to/local/directory:/path/to/virtual/directory`. `devcon-workshop` is the name of the image we are running (set in steps 3 and 5). `/ngen/ngen/data` runs the NGIAB guide script.
+
+If your NGIAB run successfully executes, you've integrated the model!
+
+## Troubleshooting
+
+### Running out of memory during Docker builds
+
+Try changing every instance of `-j $(nproc)` to a small number of processes, like `-j 4` or `-j 2`.
