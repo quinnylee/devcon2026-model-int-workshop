@@ -7,3 +7,9 @@ The workshop team has a dummy Python BMI model (regardless of input, every outpu
 If you would like to try integrating the model on your own with minimal hints, follow our [surface-level guide](try-it-guides/i-know-docker.md). This is only recommended if you know Docker.
 
 If you would like detailed instructions, follow our [detailed guide](try-it-guides/i-do-not-know-docker.md).
+
+## More resources
+
+Some useful resources:
+- [Docker documentation](https://docs.docker.com/)
+- [NGIAB 101 training module](https://ngiab.ciroh.org/training-NGIAB-101/)
